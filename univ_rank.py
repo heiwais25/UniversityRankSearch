@@ -6,26 +6,28 @@ import time
 import copy
 import numpy as np
 
+
 class University:
     id_cnt = 0
+
     def __init__(self, name, country):
         self.name = name
         self.country = country
-        self.rank = {"default":-1}
+        self.rank = {"default": -1}
         self.id = University.id_cnt
         University.id_cnt += 1
 
     def __repr__(self):
         return "%s, %s, %s" % (self.name, self.country, self.rank)
 
-    def set_rank(self, rank, condition = "default"):
+    def set_rank(self, rank, condition="default"):
         self.rank[condition] = rank
-
 
 
 class UserTrie:
     """It contains datrie library
     """
+
     def __init__(self):
         ALPHABET = u'abcdefghijklmnopqrstuvwxyz0123456789()&-., '
         self.trie = datrie.BaseTrie(ALPHABET)
@@ -45,7 +47,7 @@ class UserTrie:
 
 
 class UnivRank:
-    def __init__(self, src_dir = "./data/univ_rank.json"):
+    def __init__(self, src_dir="./data/univ_rank.json"):
         """ Read DB which is created by crawling script. It contains information 
         of rank information of university in each country and subject.
 
@@ -69,7 +71,7 @@ class UnivRank:
 
         # Read University Rank
         with open(src_dir, 'r', encoding='utf-8') as fp:
-            orig_univ_rank = json.load(fp)    
+            orig_univ_rank = json.load(fp)
 
         # Define university class
         names = orig_univ_rank["univ_info"]["name"]
@@ -79,28 +81,29 @@ class UnivRank:
         # Set university object with correct rank in each category
         self.univ_list = [
             University(name, country) for name, country in zip(names, countries)
-            ]
+        ]
 
-        [self.univ_list[rank].set_rank(rank + 1) for rank in self.indicies["default"]]
-        [self.univ_list[idx].set_rank(rank + 1, condition="country") 
-            for country in self.indicies["country"] 
-                for rank, idx in enumerate(self.indicies["country"][country])]
+        [self.univ_list[rank].set_rank(rank + 1)
+         for rank in self.indicies["default"]]
+        [self.univ_list[idx].set_rank(rank + 1, condition="country")
+            for country in self.indicies["country"]
+         for rank, idx in enumerate(self.indicies["country"][country])]
         [self.univ_list[idx].set_rank(rank + 1, condition=subject)
             for subject in self.indicies["subject"]
-                for rank, idx in enumerate(self.indicies["subject"][subject])]
+         for rank, idx in enumerate(self.indicies["subject"][subject])]
 
         # Build trie
         self.trie = {
-            "univ_name" : make_suffix_trie(orig_univ_rank["univ_info"]["name"]),
-            "country" : make_prefix_trie(list(self.indicies["country"].keys())),
-            "subject" : make_prefix_trie(list(self.indicies["subject"].keys()))
+            "univ_name": make_suffix_trie(orig_univ_rank["univ_info"]["name"]),
+            "country": make_prefix_trie(list(self.indicies["country"].keys())),
+            "subject": make_prefix_trie(list(self.indicies["subject"].keys()))
         }
 
         self.category = "default"
         self.sub_category = "default"
+        self.total_result_length = 25
 
-
-    def set_category(self, category = "default", sub_category = "default"):
+    def set_category(self, category="default", sub_category="default"):
         """It will set category that we want to know rank
 
         ``category`` : "default", "country", "subject"
@@ -121,7 +124,10 @@ class UnivRank:
     def get_all_subject(self):
         return list(self.indicies["subject"].keys())
 
-    def get_candidates(self, search_word="", option="univ_name", limit=50):
+    def get_candidates(self, search_word="", option="univ_name", limit=25):
+        if limit == -1:
+            limit = 1e6
+
         if option == "univ_name":
             data_src = self.univ_list
         elif option == "country":
@@ -135,35 +141,46 @@ class UnivRank:
             indicies = indicies[self.sub_category]
 
         if len(search_word) == 0:
+            self.total_result_length = len(indicies)
             return copy.deepcopy([
-                data_src[indicies[i]] 
-                    for i in range(min(len(indicies), limit))
-                    ])
+                data_src[indicies[i]]
+                for i in range(min(len(indicies), limit))
+            ])
 
         trie = self.trie[option]
         candidate_indicies = sorted(
             list(set(trie.get_values(search_word.lower())) & set(indicies))
-            )
-        return copy.deepcopy([
-                data_src[candidate_indicies[i]] 
-                    for i in range(min(len(candidate_indicies), limit))
-                    ])
+        )
+
+        self.total_result_length = len(candidate_indicies)
+        ret = copy.deepcopy([
+            data_src[candidate_indicies[i]]
+            for i in range(min(len(candidate_indicies), limit))
+        ])
+        if self.category == "subject":
+           ret = sorted(ret, key=lambda univ:univ.rank[self.sub_category]) 
+
+        return ret
+
+    def get_total_result_length(self):
+        return self.total_result_length
+
+
+    def get_univ_by_id(self, univ_id):
+        return self.univ_list[univ_id]
+
 
 def main():
     start_time = time.time()
     univ_rank = UnivRank()
-    print("--- %s seconds ---" %(time.time() - start_time))
-
-    
+    print("--- %s seconds ---" % (time.time() - start_time))
 
     start_time = time.time()
     # print([univ.name for univ in univ_rank.get_candidates('timdsade')])
     print([univ.name for univ in univ_rank.get_candidates(input())])
     print([univ_rank.get_candidates('Ma', option="country")])
     print([univ_rank.get_candidates('Ma', option="subject")])
-
-    print("--- %s seconds ---" %(time.time() - start_time))
-
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
