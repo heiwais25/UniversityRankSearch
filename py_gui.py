@@ -1,4 +1,6 @@
 import sys
+import ctypes
+
 from univ_rank import UnivRank
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
@@ -31,6 +33,10 @@ class Form(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
+        # QtWidgets.QMainWindow.setA(self, QtGui.QIcon('icon.ico'))
+
+
 
         self.ui = uic.loadUi("ui.ui", self)
         self.ui.show()
@@ -375,11 +381,13 @@ class Form(QtWidgets.QDialog):
             new_candidate.append(element)
 
         candidate = new_candidate[:self._cur_display_length]
+
         return candidate, len(new_candidate)
 
     def __centeredTableItem(self, data):
         rank_item = QtWidgets.QTableWidgetItem("%s" % str(data))
-        rank_item.setTextAlignment(QtCore.Qt.AlignHCenter)
+        # rank_item.setTextAlignment(QtCore.Qt.AlignVCenter)
+        rank_item.setTextAlignment(QtCore.Qt.AlignCenter)
         return rank_item
 
 
@@ -424,6 +432,9 @@ class Form(QtWidgets.QDialog):
 
 
 if __name__ == '__main__':
+    myappid = u'mycompany.myproduct.subproduct.version' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('univ_icon.ico'))
     w = Form()
     sys.exit(app.exec())
