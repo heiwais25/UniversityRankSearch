@@ -13,10 +13,8 @@ from PyQt5.QtCore import *
 
 class Filter(QtCore.QObject):
     def eventFilter(self, widget, event):
-        # Focus out filter
-        # It is used for maintaining inital content when it is focused out
-        # without changing certain value
         if event.type() == QtCore.QEvent.FocusOut:
+            # Capture when user change its focus
             widget.setCurrentIndex(widget.currentIndex())
             return False
         else:
@@ -34,9 +32,6 @@ class Form(QtWidgets.QDialog):
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
-        # QtWidgets.QMainWindow.setA(self, QtGui.QIcon('icon.ico'))
-
-
 
         self.ui = uic.loadUi("ui.ui", self)
         self.ui.show()
@@ -70,7 +65,12 @@ class Form(QtWidgets.QDialog):
                         category_change=False, 
                         display_length_modified=False, 
                         limit=25):
-        '''
+        ''' Print list of university under the certain condition
+
+        `user_input` : String which user typed \n
+        `category_change` : If it is set, it assumes the input line stay same \n
+        `display_length_modified` : Signal that user change the length which
+        determine how many university will be shown \n
         '''
         widget = self.ui.tableWidget
         widget.setRowCount(0)
@@ -110,7 +110,7 @@ class Form(QtWidgets.QDialog):
             comboBox = self.ui.subjectComboBox
             contents = ["All subject"] + self._univ_rank.get_all_subject()
             self._cur_subject = contents[0]
-        # print(contents)
+
         # Set country combobox
         comboBox.clear()
         comboBox.setEditable(True)
@@ -202,11 +202,11 @@ class Form(QtWidgets.QDialog):
         self.ui.lineEdit.setPlaceholderText("University Name")
 
 
-
     # For the detailTableWidget ===============================================
     def _get_detailed_info(self, row, col):
         header = self.ui.tableWidget.horizontalHeaderItem(col).text()
         item = self.ui.tableWidget.item(row, col).text()
+
         # In the case of country column is doubleclicked
         if header == self._column_headers[-1]:
             index = self.ui.countryComboBox.findText(
@@ -244,6 +244,7 @@ class Form(QtWidgets.QDialog):
 
         self._cur_row = row
 
+
     def __change_img_item_changed(self):
         items = self.ui.tableWidget.selectedItems()
         if len(items):
@@ -255,12 +256,12 @@ class Form(QtWidgets.QDialog):
         self.ui.detailTableWidget.setSortingEnabled(False)
 
 
-
     # For the displayLengthComboBox ===========================================
     def __setDisplayLengthComboBox(self, totalLength):
         comboBox = self.ui.displayLengthComboBox
-        # Set length combobox
         comboBox.clear()
+
+        # Set length combobox
         display_length_idx = self.__find_corresponding_idx(
             Form.DISPLAY_ITEMS, totalLength
         )
@@ -334,9 +335,11 @@ class Form(QtWidgets.QDialog):
         self.ui.lineEdit.clear()
         self.ui.subjectComboBox.setCurrentIndex(0)
         self.ui.countryComboBox.setCurrentIndex(0)
+        self.ui.tableWidget.setCurrentCell(0,1)
         self.ui.displayLengthComboBox.setCurrentIndex(0)
         self.ui.detailTableWidget.setRowCount(0)
         self.textBrowser.clear()
+        self.ui.lineEdit.setFocus()
 
 
     # For the tableWidget =====================================================
@@ -361,10 +364,15 @@ class Form(QtWidgets.QDialog):
 
 
     def __get_candidates_at_selected_option(self, user_input):
+        '''In the case when subject and country categories are selected,
+        it is hard to process searching the univeristy given input word.
+        So, it will process categorizing subject first and compare it 
+        considering with input word and country
+        '''
+
         # Because it is easy to compare only country in both cases
         self._univ_rank.set_category("subject", self._cur_subject)
         candidate = self._univ_rank.get_candidates(user_input, limit=-1)
-
         all_candidate = [
             element for element in self._univ_rank.get_candidates(limit=-1) 
             if element.country == self._cur_country
@@ -381,15 +389,15 @@ class Form(QtWidgets.QDialog):
             new_candidate.append(element)
 
         candidate = new_candidate[:self._cur_display_length]
-
         return candidate, len(new_candidate)
 
+
     def __centeredTableItem(self, data):
+        '''It will make center aligned data in the tableWidgetItem
+        '''
         rank_item = QtWidgets.QTableWidgetItem("%s" % str(data))
-        # rank_item.setTextAlignment(QtCore.Qt.AlignVCenter)
         rank_item.setTextAlignment(QtCore.Qt.AlignCenter)
         return rank_item
-
 
 
     def __get_correct_rank(self, element_rank, mode):
@@ -426,9 +434,6 @@ class Form(QtWidgets.QDialog):
                 widget.setItem(idx, 2, QTableWidgetItem(str(element.name)))
                 widget.setItem(idx, 3, QTableWidgetItem(str(element.country)))
             self._cur_table_content_id.append(element.id)
-
-
-
 
 
 if __name__ == '__main__':

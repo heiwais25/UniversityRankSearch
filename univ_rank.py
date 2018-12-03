@@ -1,7 +1,5 @@
 import json
-import string
 import datrie
-import marisa_trie
 import time
 import copy
 import numpy as np
@@ -95,13 +93,12 @@ class UnivRank:
         # Build trie
         self.trie = {
             "univ_name": make_suffix_trie(orig_univ_rank["univ_info"]["name"]),
-            "country": make_prefix_trie(list(self.indicies["country"].keys())),
-            "subject": make_prefix_trie(list(self.indicies["subject"].keys()))
         }
 
         self.category = "default"
         self.sub_category = "default"
         self.total_result_length = 25
+
 
     def set_category(self, category="default", sub_category="default"):
         """It will set category that we want to know rank
@@ -112,17 +109,22 @@ class UnivRank:
         self.category = category
         self.sub_category = sub_category
 
+
     def get_all_country(self):
         return list(self.indicies["country"].keys())
+
 
     def has_country_key(self, string):
         return string in self.indicies["country"]
 
+
     def has_subject_key(self, string):
         return string in self.indicies["subject"]
 
+
     def get_all_subject(self):
         return list(self.indicies["subject"].keys())
+
 
     def get_candidates(self, search_word="", option="univ_name", limit=25):
         if limit == -1:
@@ -161,6 +163,7 @@ class UnivRank:
            ret = sorted(ret, key=lambda univ:univ.rank[self.sub_category]) 
 
         return ret
+
 
     def get_total_result_length(self):
         return self.total_result_length
