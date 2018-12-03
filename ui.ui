@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>629</width>
-    <height>549</height>
+    <width>496</width>
+    <height>570</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,6 +21,25 @@
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>맑은 고딕</family>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Country</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QComboBox" name="countryComboBox">
          <property name="minimumSize">
@@ -34,6 +53,9 @@
            <family>맑은 고딕</family>
            <pointsize>11</pointsize>
           </font>
+         </property>
+         <property name="whatsThis">
+          <string extracomment="Country"/>
          </property>
          <property name="editable">
           <bool>true</bool>
@@ -55,6 +77,25 @@
          </property>
          <property name="frame">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>맑은 고딕</family>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Subject</string>
          </property>
         </widget>
        </item>
@@ -308,6 +349,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>countryComboBox</tabstop>
+  <tabstop>subjectComboBox</tabstop>
+  <tabstop>lineEdit</tabstop>
+  <tabstop>tableWidget</tabstop>
+  <tabstop>displayLengthComboBox</tabstop>
+  <tabstop>textBrowser</tabstop>
+  <tabstop>detailTableWidget</tabstop>
+  <tabstop>initPushButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
