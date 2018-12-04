@@ -1,1 +1,7 @@
 univ_img
+dist/
+build/
+__pycache__/
+*.spec
+*.exe
+

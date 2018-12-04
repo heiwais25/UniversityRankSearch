@@ -1,14 +1,14 @@
 import sys
 import ctypes
-
 from univ_rank import UnivRank
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import uic
 from PyQt5 import QtCore
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QDialog, QApplication, QStyleFactory
+from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem, QCompleter
+from PyQt5.QtCore import QObject, QEvent, Qt, pyqtSlot
 
 
 class Filter(QtCore.QObject):
@@ -33,7 +33,7 @@ class Form(QtWidgets.QDialog):
         QtWidgets.QDialog.__init__(self, parent)
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
 
-        self.ui = uic.loadUi("ui.ui", self)
+        self.ui = uic.loadUi("src/ui.ui", self)
         self.ui.show()
         self._univ_rank = UnivRank()
 

@@ -2,8 +2,6 @@ import json
 import datrie
 import time
 import copy
-import numpy as np
-
 
 class University:
     id_cnt = 0
@@ -45,7 +43,7 @@ class UserTrie:
 
 
 class UnivRank:
-    def __init__(self, src_dir="./data/univ_rank.json"):
+    def __init__(self, src_dir="./src/univ_rank.json"):
         """ Read DB which is created by crawling script. It contains information 
         of rank information of university in each country and subject.
 
@@ -58,13 +56,6 @@ class UnivRank:
                 for start_idx in range(len(sentence)):
                     word = "%s%d" % (str(sentence[start_idx:]), idx)
                     trie.insert(word, idx)
-            return trie
-
-        def make_prefix_trie(sentences):
-            trie = UserTrie()
-            for idx, sentence in enumerate(sentences):
-                sentence = sentence.lower()
-                trie.insert(sentence.lower(), idx)
             return trie
 
         # Read University Rank
