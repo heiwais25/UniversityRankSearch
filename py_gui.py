@@ -1,5 +1,7 @@
 import sys
+import os
 import ctypes
+import pickle
 from univ_rank import UnivRank
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
@@ -8,34 +10,52 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QApplication, QStyleFactory
 from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem, QCompleter
-from PyQt5.QtCore import QObject, QEvent, Qt, pyqtSlot
+from PyQt5.QtCore import QObject, QEvent, Qt, pyqtSlot, QVariant
 
-
-class Filter(QtCore.QObject):
+class Filter(QObject):
     def eventFilter(self, widget, event):
-        if event.type() == QtCore.QEvent.FocusOut:
+        if event.type() == QEvent.FocusOut:
             # Capture when user change its focus
             widget.setCurrentIndex(widget.currentIndex())
             return False
         else:
             return False
 
+class MyTableWidgetItem(QTableWidgetItem):
+    def __lt__(self, other):
+        if ( isinstance(other, QTableWidgetItem) ):
+            my_value = str(self.data(Qt.EditRole))
+            other_value = str(other.data(Qt.EditRole))
 
-class Form(QtWidgets.QDialog):
+            if my_value.isdigit():
+                my_value = int(my_value)
+                other_value = int(other_value)
+                
+                # if ( my_ok and other_ok ):
+                return my_value < other_value
+
+        return super(MyTableWidgetItem, self).__lt__(other)
+
+class Form(QDialog):
     DEFAULT_DISPLAY_LENGTH = 25
     DISPLAY_ITEMS = [25, 50, 100, 200]
     FILTER_MODE = {
         "default" : 0,
         "extended" : 1
     }
-
+    RANK_CACHE_FILE_NAME = "src/cache"
+    
     def __init__(self, parent=None):
-        QtWidgets.QDialog.__init__(self, parent)
-        QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
+        QDialog.__init__(self, parent)
+        QApplication.setStyle(QStyleFactory.create('Fusion'))
 
         self.ui = uic.loadUi("src/ui.ui", self)
-        self.ui.show()
-        self._univ_rank = UnivRank()
+
+        if os.path.exists(Form.RANK_CACHE_FILE_NAME):
+            self._univ_rank = pickle.load(open(Form.RANK_CACHE_FILE_NAME, "rb"))
+        else:            
+            self._univ_rank = UnivRank()
+            pickle.dump(self._univ_rank, open(Form.RANK_CACHE_FILE_NAME, "wb"))
 
         self._init_lineEdit()
 
@@ -47,7 +67,6 @@ class Form(QtWidgets.QDialog):
         self._init_detailTableWidget()
 
         self._init_displayLengthComboBox()
-
 
     def _get_current_filter_mode(self):
         ''' 0 : Default, 1 : Subject and country selected, 2 : else
@@ -139,9 +158,9 @@ class Form(QtWidgets.QDialog):
         widget.setColumnCount(3)
         header = widget.horizontalHeader()
 
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
 
         self._column_headers = [
             'Current\nRank', 'Default\nRank', 'Name', 'Country'
@@ -166,14 +185,15 @@ class Form(QtWidgets.QDialog):
         '''Initialize detailTableWidget which shows selected university info
         '''
         self._cur_row = -1
+        self._sort_order = 0
         widget = self.ui.detailTableWidget
         detail_column_header = ['Subject', 'Rank']
         widget.setColumnCount(2)
 
         header = widget.horizontalHeader()
         header.setStyleSheet("::section { padding:10px; }")
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.sectionClicked.connect(self.__setSortingMode)
 
         widget.setHorizontalHeader(header)
@@ -210,7 +230,7 @@ class Form(QtWidgets.QDialog):
         # In the case of country column is doubleclicked
         if header == self._column_headers[-1]:
             index = self.ui.countryComboBox.findText(
-                item, QtCore.Qt.MatchFixedString)
+                item, Qt.MatchFixedString)
             if index >= 0:
                 self.ui.countryComboBox.setCurrentIndex(index)
             self.ui.countryComboBox.setCurrentIndex(index)
@@ -235,7 +255,7 @@ class Form(QtWidgets.QDialog):
         if row == self._cur_row:
             return
 
-        image_path = './univ_img/img_%d.jpg' % univ.id
+        image_path = '.src/univ_img/img_%d.jpg' % univ.id
         self.textBrowser.document().setHtml("""
         <div align="center">
             <img src="{0}" style="vertical-align: middle;"/>
@@ -246,15 +266,21 @@ class Form(QtWidgets.QDialog):
 
 
     def __change_img_item_changed(self):
+        self._sort_order = 0
         items = self.ui.tableWidget.selectedItems()
         if len(items):
             self._change_img(items[0].row(), 0)
 
 
-    def __setSortingMode(self):
+    def __setSortingMode(self, column):
         self.ui.detailTableWidget.setSortingEnabled(True)
+        if self._sort_order:
+            order = Qt.DescendingOrder
+        else:
+            order = Qt.AscendingOrder
+        self._sort_order = not self._sort_order
+        self.ui.detailTableWidget.sortItems(column, order)
         self.ui.detailTableWidget.setSortingEnabled(False)
-
 
     # For the displayLengthComboBox ===========================================
     def __setDisplayLengthComboBox(self, totalLength):
@@ -277,7 +303,7 @@ class Form(QtWidgets.QDialog):
             display_length = self._univ_rank.get_total_result_length()
         else:
             display_length = int(currentText)
-        # if self._cur_display_length != display_length:
+
         self._cur_display_length = display_length
         self._print_univ_list(category_change=True,
                              limit=display_length, 
@@ -395,8 +421,9 @@ class Form(QtWidgets.QDialog):
     def __centeredTableItem(self, data):
         '''It will make center aligned data in the tableWidgetItem
         '''
-        rank_item = QtWidgets.QTableWidgetItem("%s" % str(data))
-        rank_item.setTextAlignment(QtCore.Qt.AlignCenter)
+        rank_item = MyTableWidgetItem()
+        rank_item.setData(Qt.EditRole, QVariant("%s" % str(data)))
+        rank_item.setTextAlignment(Qt.AlignCenter)
         return rank_item
 
 
@@ -439,7 +466,8 @@ class Form(QtWidgets.QDialog):
 if __name__ == '__main__':
     myappid = u'mycompany.myproduct.subproduct.version' # arbitrary string
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('univ_icon.ico'))
+    app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon("src/univ_icon.ico"))
     w = Form()
+    w.show()
     sys.exit(app.exec())
