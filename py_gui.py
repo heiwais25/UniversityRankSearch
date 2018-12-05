@@ -255,7 +255,7 @@ class Form(QDialog):
         if row == self._cur_row:
             return
 
-        image_path = '.src/univ_img/img_%d.jpg' % univ.id
+        image_path = 'src/univ_img/img_%d.jpg' % univ.id
         self.textBrowser.document().setHtml("""
         <div align="center">
             <img src="{0}" style="vertical-align: middle;"/>
