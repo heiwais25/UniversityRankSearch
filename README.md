@@ -25,7 +25,7 @@ package
 
 You can get below example image after you enter `python ./py_gui.py`.
 
-<div style="text-align:center"><img src ="image/sample.PNG" /></div>
+<p align="center"><img src ="image/sample.PNG" /></p> 
 <br/>
 
 ## To make .exe file
@@ -36,7 +36,7 @@ Run the `build.py` with follwing options
 
 > - `--onedir` : Make exe within one directory
 > - `--onename` : Make exe in one file
-> - `name NAME` : Name of the output file and directory
+> - `--name NAME` : Name of the output file and directory
 
 If you don't want, you can run following command
 
