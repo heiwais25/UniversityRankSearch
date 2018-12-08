@@ -252,9 +252,6 @@ class Form(QDialog):
                 idx, 1, self.__centeredTableItem(content[1])
             )
 
-        if row == self._cur_row:
-            return
-
         image_path = 'src/univ_img/img_%d.jpg' % univ.id
         self.textBrowser.document().setHtml("""
         <div align="center">
@@ -358,6 +355,7 @@ class Form(QDialog):
 
     @pyqtSlot()
     def slot_1st(self):
+        self._cur_row = -1
         self.ui.lineEdit.clear()
         self.ui.subjectComboBox.setCurrentIndex(0)
         self.ui.countryComboBox.setCurrentIndex(0)
